@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
 import { cache } from 'react'
 
-export const createClient = cache(() => {
+export const createClient = cache(async () => {
   const cookieStore = cookies()
 
   return createServerClient<Database>(
@@ -11,20 +11,20 @@ export const createClient = cache(() => {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        async get(name: string) {
-          const cookie = await cookieStore.get(name)
+        get: async (name: string) => {
+          const cookie = cookieStore.get(name)
           return cookie?.value
         },
-        async set(name: string, value: string, options: CookieOptions) {
+        set: async (name: string, value: string, options: CookieOptions) => {
           try {
-            await cookieStore.set({ name, value, ...options })
+            cookieStore.set({ name, value, ...options })
           } catch (error) {
             // Handle cookie setting error
           }
         },
-        async remove(name: string, options: CookieOptions) {
+        remove: async (name: string, options: CookieOptions) => {
           try {
-            await cookieStore.delete({ name, ...options })
+            cookieStore.delete({ name, ...options })
           } catch (error) {
             // Handle cookie removal error
           }

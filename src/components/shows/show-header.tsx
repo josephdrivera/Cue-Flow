@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Play, Settings, Calendar, Clock, MoreVertical } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
