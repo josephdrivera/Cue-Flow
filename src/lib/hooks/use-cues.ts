@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Cue } from '@/types/cue';
-import { sortCues } from '@/lib/utils/cues';
+import { sortCues, parseCueNumber, getNextCueNumberForPrefix } from '@/lib/utils/cues';
 import { calculateEndTime } from '@/lib/utils/time';
 
 interface UseCuesOptions {
@@ -150,9 +150,50 @@ export function useCues({ showId, initialCues = [] }: UseCuesOptions): UseCuesRe
     const supabase = createClient();
     
     try {
-      // Implement cue reordering logic here
-      // This might involve updating multiple cues to maintain proper ordering
-      console.log('Reorder implementation needed');
+      // Get the cue being moved
+      const currentCue = cues.find(cue => cue.id === id);
+      if (!currentCue) {
+        throw new Error('Cue not found');
+      }
+
+      // Get sorted cues for the relevant section
+      const sortedCues = sortCues(cues);
+      const targetIndex = Math.min(Math.max(0, newPosition), sortedCues.length - 1);
+      const targetCue = sortedCues[targetIndex];
+
+      // Determine new cue number based on position
+      let newCueNumber: string;
+
+      if (targetIndex === 0) {
+        // Moving to start - use number before first cue
+        const firstCue = sortedCues[0];
+        const { prefix } = parseCueNumber(firstCue.cue_number);
+        newCueNumber = `${prefix}100`;
+      } else if (targetIndex === sortedCues.length - 1) {
+        // Moving to end - use next available number
+        const lastCue = sortedCues[sortedCues.length - 1];
+        const { prefix } = parseCueNumber(lastCue.cue_number);
+        newCueNumber = getNextCueNumberForPrefix(cues, prefix);
+      } else {
+        // Moving between two cues
+        const prevCue = sortedCues[targetIndex - 1];
+        const nextCue = sortedCues[targetIndex];
+        const { prefix: prevPrefix, number: prevNum } = parseCueNumber(prevCue.cue_number);
+        const { number: nextNum } = parseCueNumber(nextCue.cue_number);
+        
+        // Calculate a number between the two positions
+        const newNum = Math.floor((prevNum + nextNum) / 2);
+        newCueNumber = `${prevPrefix}${newNum}`;
+      }
+
+      // Update the cue with new number
+      const { error: updateError } = await supabase
+        .from('cues')
+        .update({ cue_number: newCueNumber })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to reorder cue'));
       throw err;
