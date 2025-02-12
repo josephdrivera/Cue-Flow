@@ -17,9 +17,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <Providers>
-          <LayoutWrapper>{children}</LayoutWrapper>
+          <div suppressHydrationWarning>
+            <LayoutWrapper>{children}</LayoutWrapper>
+          </div>
         </Providers>
       </body>
     </html>
