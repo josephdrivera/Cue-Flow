@@ -15,7 +15,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { Show } from '@/types/show';
 
-export default function Sidebar({ 
+export default function LayoutWrapper({ 
   className = "",
   isOpen = true
 }: { 

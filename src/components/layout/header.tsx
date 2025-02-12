@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react';
 import { Sun, Moon, Menu } from 'lucide-react';
 import Link from 'next/link';
