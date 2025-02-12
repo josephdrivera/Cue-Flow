@@ -1,24 +1,19 @@
-import { Suspense } from 'react';
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Search } from 'lucide-react';
-import { createClient } from '@/lib/supabase/server';
+import { Plus } from 'lucide-react';
 import { Show } from '@/types/show';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import SearchShows from './search-shows';
+import ShowStats from './show-stats';
 import { formatDistanceToNow } from 'date-fns';
 
-async function ShowGrid() {
-  const supabase = await createClient();
-  
-  const { data: shows } = await supabase
-    .from('shows')
-    .select('*')
-    .order('updated_at', { ascending: false });
-
+function ShowGrid({ shows }: { shows: Show[] }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {shows?.map((show: Show) => (
+      {shows.map((show) => (
         <Card key={show.id} className="flex flex-col">
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
@@ -57,6 +52,8 @@ async function ShowGrid() {
 }
 
 export default function DashboardPage() {
+  const [filteredShows, setFilteredShows] = useState<Show[]>([]);
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -69,26 +66,13 @@ export default function DashboardPage() {
         </Button>
       </div>
 
+      <ShowStats />
+
       <div className="flex items-center space-x-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search shows..."
-            className="pl-8"
-          />
-        </div>
+        <SearchShows onSearch={setFilteredShows} />
       </div>
 
-      <Suspense fallback={
-        <div className="flex items-center justify-center min-h-[200px]">
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-r-transparent" />
-            <p className="text-sm text-muted-foreground">Loading shows...</p>
-          </div>
-        </div>
-      }>
-        <ShowGrid />
-      </Suspense>
+      <ShowGrid shows={filteredShows} />
     </div>
   );
 }
